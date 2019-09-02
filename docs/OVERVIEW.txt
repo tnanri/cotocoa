@@ -1,0 +1,62 @@
+Overview of CoToCoA
+
+1. Program categories
+
+CoToCoA is a framework for coupling two types of programs to work togather to enable
+computation on multi-scale problems. The most naive approach for coupling programs
+is to use intermediate files for transferring data from one program to the other.
+Instead, CoToCoA allows direct communication between two types of programs.
+
+Similar to the cases of coupled computations in which files are used for data
+transfer, CoToCoA assumes that the flow of computation is one-directional, from
+one type of program to the other. In CoToCoA, the program of the origin of the flow
+is categorized as requester, while the target of the flow is categorized as worker.
+CoToCoA allows a requester to choose a worker from a group of workers, according to
+the status of its computation. 
+
+Usually, programs of requester and worker are created from modfying existing
+independent programs. To minimize modifications on those programs, CoToCoA uses
+another category of program, coupler. Fundamental roles of the couper are:
+ - Accept requests from the requester
+ - Choose the worker to handle the request
+ - Enqueue the request to the worker
+Also, the coupler can perform more complicated computation internaly, and create
+data to be used in the worker.
+
+2. Flow of data transfers
+
+In CoToCoA, each worker requires some data of the requester. In some cases, the
+requester can determine the data to be transferred to the worker when it sends
+a request to the coupler. In other cases, the data required in the worker can only
+be determined dynamically in the computation of the request at the worker. Also,
+there can be cases in which the data of the requester needs some transformation
+so that it can be used in the worker program. 
+
+Therefore, CoToCoA prepares APIs to allow the following scenarios for data transfer:
+
+1) Requester attaches the data to the request, and it is used as it is at the worker.
+
+   The requester attaches its data to a request and send it to the coupler. Then,
+   the coupler enqueues the request as it is to the worker.
+
+2) Coupler transforms the data sent from the requester.
+
+   The requester attaches its data to a request and send it to the coupler. The
+   coupler modifies the data, attaches it to the request and enqueues it to the
+   worker.
+
+3) Coupler reads data from requester.
+
+   The requester sends a request with minimal information of computation at worker,
+   such as time step or parameter, to the coupler. The couler uses the information
+   to read data from the memory of the requester, transforms it if necessary,
+   attaches it to the request and enqueues it to the worker.
+
+4) Worker reads data from requester.
+
+   The requester sends a request with minimal information of computation at worker,
+   such as time step or parameter, to the coupler. The couler enqueues the request
+   as it is to the worker. The worker uses the information to start its computation.
+   Then, along with the computation, the worker determines the data required in the
+   future, and reads it from the requester.
+
