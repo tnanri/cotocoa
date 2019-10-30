@@ -89,6 +89,8 @@ static int setup_common_tables()
     areawin_table = (MPI_Win *)malloc(maxareas * sizeof(MPI_Win));
     role_table = (int *)malloc(world_nprocs * sizeof(int));
     subrank_table = (int *)malloc(world_nprocs * sizeof(int));
+
+    return 0;
 }
 
 static int free_common_tables()
@@ -99,16 +101,13 @@ static int free_common_tables()
     free(role_table);
     free(subrank_table);
     free(requesterid_table);
-}
 
-int CTCAR_init()
-{
-    return CTCAR_init_detail(DEF_MAXNUMAREAS, DEF_REQ_NUMREQS, DEF_MAXINTPARAMS);
+    return 0;
 }
 
 int CTCAR_init_detail(int numareas, int numreqs, int intparams)
 {
-    int err, i, sub_myrank, val;
+    int i, sub_myrank, val;
     int *rank_progid_table;
     int *rank_procspercomm_table;
     int *rank_wrkcomm_table;
@@ -185,49 +184,13 @@ int CTCAR_init_detail(int numareas, int numreqs, int intparams)
     free(rank_progid_table);
     free(rank_procspercomm_table);
     free(rank_wrkcomm_table);
+
+    return 0;
 }
 
-int CTCAR_regarea_int(int *base, int size, int *areaid)
+int CTCAR_init()
 {
-    MPI_Aint size_byte;
-
-    if (myrole != ROLE_REQ) {
-        fprintf(stderr, "%d : CTCAR_regarea_int() : wrong role %d\n", world_myrank, myrole);
-        return 0;
-    }
-
-    size_byte = size * sizeof(int);
-    return req_regarea((void *)base, size, size_byte, sizeof(int), AREA_INT, areaid);
-}
-
-int CTCAR_regarea_real4(float *base, int size, int *areaid)
-{
-    MPI_Aint size_byte;
-
-    if (myrole != ROLE_REQ) {
-        fprintf(stderr, "%d : CTCAR_regarea_real4() : wrong role %d\n", world_myrank, myrole);
-        return 0;
-    }
-
-    if (myrole != ROLE_REQ) {
-        fprintf(stderr, "%d : () : wrong role\n", world_myrank);
-        return 0;
-    }
-    size_byte = size * sizeof(float);
-    return req_regarea((void *)base, size, size_byte, sizeof(float), AREA_REAL4, areaid);
-}
-
-int CTCAR_regarea_real8(double *base, int size, int *areaid)
-{
-    MPI_Aint size_byte;
-
-    if (myrole != ROLE_REQ) {
-        fprintf(stderr, "%d : CTCAR_regarea_real8() : wrong role %d\n", world_myrank, myrole);
-        return 0;
-    }
-
-    size_byte = size * sizeof(double);
-    return req_regarea((void *)base, size, size_byte, sizeof(double), AREA_REAL8, areaid);
+    return CTCAR_init_detail(DEF_MAXNUMAREAS, DEF_REQ_NUMREQS, DEF_MAXINTPARAMS);
 }
 
 int req_regarea(void *base, int size, MPI_Aint size_byte, int unit, int type, int *areaid)
@@ -251,6 +214,51 @@ int req_regarea(void *base, int size, MPI_Aint size_byte, int unit, int type, in
 
     *areaid = areaidctr;
     areaidctr++;
+
+    return 0;
+}
+
+int CTCAR_regarea_int(int *base, int size, int *areaid)
+{
+    MPI_Aint size_byte;
+
+    if (myrole != ROLE_REQ) {
+        fprintf(stderr, "%d : CTCAR_regarea_int() : wrong role %d\n", world_myrank, myrole);
+        return -1;
+    }
+
+    size_byte = size * sizeof(int);
+    return req_regarea((void *)base, size, size_byte, sizeof(int), AREA_INT, areaid);
+}
+
+int CTCAR_regarea_real4(float *base, int size, int *areaid)
+{
+    MPI_Aint size_byte;
+
+    if (myrole != ROLE_REQ) {
+        fprintf(stderr, "%d : CTCAR_regarea_real4() : wrong role %d\n", world_myrank, myrole);
+        return -1;
+    }
+
+    if (myrole != ROLE_REQ) {
+        fprintf(stderr, "%d : () : wrong role\n", world_myrank);
+        return -1;
+    }
+    size_byte = size * sizeof(float);
+    return req_regarea((void *)base, size, size_byte, sizeof(float), AREA_REAL4, areaid);
+}
+
+int CTCAR_regarea_real8(double *base, int size, int *areaid)
+{
+    MPI_Aint size_byte;
+
+    if (myrole != ROLE_REQ) {
+        fprintf(stderr, "%d : CTCAR_regarea_real8() : wrong role %d\n", world_myrank, myrole);
+        return -1;
+    }
+
+    size_byte = size * sizeof(double);
+    return req_regarea((void *)base, size, size_byte, sizeof(double), AREA_REAL8, areaid);
 }
 
 int req_sendreq(int *intparams, int numintparams, void *data, int datasize, int datatype, int reqentry)
@@ -259,7 +267,7 @@ int req_sendreq(int *intparams, int numintparams, void *data, int datasize, int 
 
     if (myrole != ROLE_REQ) {
         fprintf(stderr, "%d : () : wrong role %d\n", world_myrank, myrole);
-        return 0;
+        return -1;
     }
 
     if (numintparams > maxintparams) {
@@ -279,16 +287,20 @@ int req_sendreq(int *intparams, int numintparams, void *data, int datasize, int 
 
 //  wait for a reply from the coupler
     MPI_Recv(&reply, 1, MPI_INT, rank_cpl, TAG_REP, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+    return 0;
 }
 
 int CTCAR_sendreq(int *intparams, int numintparams)
 {
     if (myrole != ROLE_REQ) {
         fprintf(stderr, "%d : CTCAR_sendreq() : wrong role %d\n", world_myrank, myrole);
-        return 0;
+        return -1;
     }
 
     req_sendreq(intparams, numintparams, NULL, 0, 0, -1);
+
+    return 0;
 }
 
 int find_reqentry()
@@ -307,11 +319,11 @@ int find_reqentry()
 
 int CTCAR_sendreq_hdl(int *intparams, int numintparams, int64_t *hdl)
 {
-    int i, reqentry;
+    int reqentry;
 
     if (myrole != ROLE_REQ) {
         fprintf(stderr, "%d : CTCAR_sendreq_hdl() : wrong role %d\n", world_myrank, myrole);
-        return 0;
+        return -1;
     }
 
 //  find empty entry of the request status table
@@ -331,42 +343,44 @@ int CTCAR_sendreq_hdl(int *intparams, int numintparams, int64_t *hdl)
 //     send a request with this entry
         req_sendreq(intparams, numintparams, NULL, 0, 0, reqentry);
     }
+
+    return 0;
 }
 
 int CTCAR_sendreq_withint(int *intparams, int numintparams, int *data, int datanum)
 {
-    int i, reqentry;
-
     if (myrole != ROLE_REQ) {
         fprintf(stderr, "%d : CTCAR_sendreq_withint() : wrong role %d\n", world_myrank, myrole);
-        return 0;
+        return -1;
     }
 
     req_sendreq(intparams, numintparams, data, datanum*sizeof(int), DAT_INT, -1);
+
+    return 0;
 }
 
 int CTCAR_sendreq_withreal4(int *intparams, int numintparams, float *data, int datanum)
 {
-    int i, reqentry;
-
     if (myrole != ROLE_REQ) {
         fprintf(stderr, "%d : CTCAR_sendreq_withreal4() : wrong role %d\n", world_myrank, myrole);
-        return 0;
+        return -1;
     }
 
     req_sendreq(intparams, numintparams, data, datanum*sizeof(float), DAT_REAL4, -1);
+
+    return 0;
 }
 
 int CTCAR_sendreq_withreal8(int *intparams, int numintparams, double *data, int datanum)
 {
-    int i, reqentry;
-
     if (myrole != ROLE_REQ) {
         fprintf(stderr, "%d : CTCAR_sendreq_withreal8() : wrong role %d\n", world_myrank, myrole);
-        return 0;
+        return -1;
     }
 
     req_sendreq(intparams, numintparams, data, datanum*sizeof(double), DAT_REAL8, -1);
+
+    return 0;
 }
 
 int CTCAR_sendreq_withint_hdl(int *intparams, int numintparams, int *data, int datanum, int64_t *hdl)
@@ -375,7 +389,7 @@ int CTCAR_sendreq_withint_hdl(int *intparams, int numintparams, int *data, int d
 
     if (myrole != ROLE_REQ) {
         fprintf(stderr, "%d : CTCAR_sendreq_withint_hdl() : wrong role %d\n", world_myrank, myrole);
-        return 0;
+        return -1;
     }
 
 //  find empty entry of the request status table
@@ -394,6 +408,8 @@ int CTCAR_sendreq_withint_hdl(int *intparams, int numintparams, int *data, int d
 //     send a request with this entry
         req_sendreq(intparams, numintparams, data, datanum*sizeof(int), DAT_INT, -1);
     }
+
+    return 0;
 }
 
 int CTCAR_sendreq_withreal4_hdl(int *intparams, int numintparams, float *data, int datanum, int64_t *hdl)
@@ -402,7 +418,7 @@ int CTCAR_sendreq_withreal4_hdl(int *intparams, int numintparams, float *data, i
 
     if (myrole != ROLE_REQ) {
         fprintf(stderr, "%d : CTCAR_sendreq_withreal4_hdl() : wrong role %d\n", world_myrank, myrole);
-        return 0;
+        return -1;
     }
 
 //  find empty entry of the request status table
@@ -421,6 +437,8 @@ int CTCAR_sendreq_withreal4_hdl(int *intparams, int numintparams, float *data, i
 //     send a request with this entry
         req_sendreq(intparams, numintparams, data, datanum*sizeof(float), DAT_REAL4, -1);
     }
+
+    return 0;
 }
 
 int CTCAR_sendreq_withreal8_hdl(int *intparams, int numintparams, double *data, int datanum, int64_t *hdl)
@@ -429,7 +447,7 @@ int CTCAR_sendreq_withreal8_hdl(int *intparams, int numintparams, double *data, 
 
     if (myrole != ROLE_REQ) {
         fprintf(stderr, "%d : CTCAR_sendreq_withreal8_hdl() : wrong role %d\n", world_myrank, myrole);
-        return 0;
+        return -1;
     }
 
 //  find empty entry of the request status table
@@ -448,6 +466,8 @@ int CTCAR_sendreq_withreal8_hdl(int *intparams, int numintparams, double *data, 
 //     send a request with this entry
         req_sendreq(intparams, numintparams, data, datanum*sizeof(double), DAT_REAL8, -1);
     }
+
+    return 0;
 }
 
 int CTCAR_wait(int64_t hdl)
@@ -456,7 +476,7 @@ int CTCAR_wait(int64_t hdl)
 
     if (myrole != ROLE_REQ) {
         fprintf(stderr, "%d : CTCAR_wait() : wrong role %d\n", world_myrank, myrole);
-        return 0;
+        return -1;
     }
 
     do {
@@ -467,13 +487,15 @@ int CTCAR_wait(int64_t hdl)
                 break;
             }
     } while (flag == 1);
+
+    return 0;
 }
 
 int CTCAR_finalize()
 {
     if (myrole != ROLE_REQ) {
         fprintf(stderr, "%d : CTCAR_finalize() : wrong role %d\n", world_myrank, myrole);
-        return 0;
+        return -1;
     }
 
     mystat = STAT_FIN;
@@ -487,6 +509,8 @@ int CTCAR_finalize()
     free(req_reqbuf);
 
     MPI_Finalize();
+
+    return 0;
 }
 
 int insert_progid(int *table, int tablesize, int id, int numentries)
@@ -542,12 +566,6 @@ int find_progid(int *table, int tablesize, int id)
     } 
 
     return ret;
-}
-
-
-int CTCAC_init()
-{
-    CTCAC_init_detail(DEF_MAXNUMAREAS, DEF_CPL_NUMREQS, DEF_MAXINTPARAMS, DEF_CPL_DATBUF_SLOTSZ, DEF_CPL_DATBUF_SLOTNUM);
 }
 
 int CTCAC_init_detail(int numareas, int numreqs, int intparams, int bufslotsz, int bufslotnum)
@@ -777,36 +795,15 @@ int CTCAC_init_detail(int numareas, int numreqs, int intparams, int bufslotsz, i
     free(progid_wrkcommctr_table);
     free(rank_wrkcomm_table);
     free(progid_procctr_table);
+
+    return 0;
 }
 
-int CTCAC_regarea_int(int *areaid)
+int CTCAC_init()
 {
-    if (myrole != ROLE_CPL) {
-        fprintf(stderr, "%d : CTCAC_regarea_int() : wrong role %d\n", world_myrank, myrole);
-        return 0;
-    }
+    CTCAC_init_detail(DEF_MAXNUMAREAS, DEF_CPL_NUMREQS, DEF_MAXINTPARAMS, DEF_CPL_DATBUF_SLOTSZ, DEF_CPL_DATBUF_SLOTNUM);
 
-    cpl_regarea(areaid);
-}
-
-int CTCAC_regarea_real4(int *areaid)
-{
-    if (myrole != ROLE_CPL) {
-        fprintf(stderr, "%d : CTCAC_regarea_real4() : wrong role %d\n", world_myrank, myrole);
-        return 0;
-    }
-
-    cpl_regarea(areaid);
-}
-
-int CTCAC_regarea_real8(int *areaid)
-{
-    if (myrole != ROLE_CPL) {
-        fprintf(stderr, "%d : CTCAC_regarea_real8() : wrong role %d\n", world_myrank, myrole);
-        return 0;
-    }
-
-    cpl_regarea(areaid);
+    return 0;
 }
 
 int cpl_regarea(int *areaid)
@@ -826,13 +823,51 @@ int cpl_regarea(int *areaid)
 
     *areaid = areaidctr;
     areaidctr++;
+
+    return 0;
+}
+
+int CTCAC_regarea_int(int *areaid)
+{
+    if (myrole != ROLE_CPL) {
+        fprintf(stderr, "%d : CTCAC_regarea_int() : wrong role %d\n", world_myrank, myrole);
+        return -1;
+    }
+
+    cpl_regarea(areaid);
+
+    return 0;
+}
+
+int CTCAC_regarea_real4(int *areaid)
+{
+    if (myrole != ROLE_CPL) {
+        fprintf(stderr, "%d : CTCAC_regarea_real4() : wrong role %d\n", world_myrank, myrole);
+        return -1;
+    }
+
+    cpl_regarea(areaid);
+
+    return 0;
+}
+
+int CTCAC_regarea_real8(int *areaid)
+{
+    if (myrole != ROLE_CPL) {
+        fprintf(stderr, "%d : CTCAC_regarea_real8() : wrong role %d\n", world_myrank, myrole);
+        return -1;
+    }
+
+    cpl_regarea(areaid);
+
+    return 0;
 }
 
 int CTCAC_isfin()
 {
     if (myrole != ROLE_CPL) {
         fprintf(stderr, "%d : CTCAC_isfin() : wrong role %d\n", world_myrank, myrole);
-        return 0;
+        return -1;
     }
 
     if (mystat == STAT_FIN)
@@ -847,7 +882,7 @@ int cpl_progress()
 
     if (myrole != ROLE_CPL) {
         fprintf(stderr, "%d : () : wrong role %d\n", world_myrank, myrole);
-        return 0;
+        return -1;
     }
 
 //  find available worker for each request
@@ -891,48 +926,9 @@ int cpl_progress()
     for (i = j; i < cpl_reqq_tail; i++)
         cpl_reqq[i * (CPLWRK_REQITEMS + maxintparams) + CPLWRK_REQ_ITEM_PROGID] = -1;
     cpl_reqq_tail = j;
+
+    return 0;
 }
-
-int CTCAC_pollreq(int *reqinfo, int *fromrank, int *intparam, int intparamnum)
-{
-    if (myrole != ROLE_CPL) {
-        fprintf(stderr, "%d : CTCAC_pollreq() : wrong role %d\n", world_myrank, myrole);
-        return 0;
-    }
-
-    cpl_pollreq(reqinfo, fromrank, intparam, intparamnum, NULL, 0);
-}
-
-int CTCAC_pollreq_withint(int *reqinfo, int *fromrank, int *intparam, int intparamnum, int *data, int datanum)
-{
-    if (myrole != ROLE_CPL) {
-        fprintf(stderr, "%d : CTCAC_pollreq_withint() : wrong role %d\n", world_myrank, myrole);
-        return 0;
-    }
-
-    cpl_pollreq(reqinfo, fromrank, intparam, intparamnum, (void *)data, datanum * sizeof(int));
-}
-
-int CTCAC_pollreq_withreal4(int *reqinfo, int *fromrank, int *intparam, int intparamnum, float *data, int datanum)
-{
-    if (myrole != ROLE_CPL) {
-        fprintf(stderr, "%d : CTCAC_pollreq_withreal4() : wrong role %d\n", world_myrank, myrole);
-        return 0;
-    }
-
-    cpl_pollreq(reqinfo, fromrank, intparam, intparamnum, (void *)data, datanum * sizeof(float));
-}
-
-int CTCAC_pollreq_withreal8(int *reqinfo, int *fromrank, int *intparam, int intparamnum, double *data, int datanum)
-{
-    if (myrole != ROLE_CPL) {
-        fprintf(stderr, "%d : CTCAC_pollreq_withreal8() : wrong role %d\n", world_myrank, myrole);
-        return 0;
-    }
-
-    cpl_pollreq(reqinfo, fromrank, intparam, intparamnum, (void *)data, datanum * sizeof(double));
-}
-
 
 int cpl_pollreq(int *reqinfo, int *fromrank, int *intparam, int intparamnum, void *data, int datasz)
 {
@@ -966,12 +962,12 @@ int cpl_pollreq(int *reqinfo, int *fromrank, int *intparam, int intparamnum, voi
                     reqintnum -= REQCPL_REQITEMS;
                     if (reqintnum != intparamnum) {
                         fprintf(stderr, "%d : cpl_pollreq() : inconsistent number of integer parameters\n", world_myrank);
-                        return 0;
+                        return -1;
                     }
                     reqdatasz = cpl_reqbuf[REQCPL_REQ_ITEM_DATSZ];
                     if (reqdatasz != datasz) {
                         fprintf(stderr, "%d : cpl_pollreq() : inconsistent size of data\n", world_myrank);
-                        return 0;
+                        return -1;
                     }
                     *fromrank = subrank_table[stat.MPI_SOURCE];
                     if (reqdatasz > 0) 
@@ -985,8 +981,7 @@ int cpl_pollreq(int *reqinfo, int *fromrank, int *intparam, int intparamnum, voi
                     if (reqdatasz > 0) 
                         MPI_Wait(&req, MPI_STATUS_IGNORE);
                     MPI_Send(&val, 1, MPI_INT, stat.MPI_SOURCE, TAG_REP, MPI_COMM_WORLD);
-                    return 1;
-                    break;
+                    return 0;
                 case TAG_REP:
                     MPI_Recv(cpl_reqbuf, 1, MPI_INT, stat.MPI_SOURCE, TAG_REP, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                     for (i = 0; i < cpl_numwrkcomms; i++)
@@ -1003,51 +998,61 @@ int cpl_pollreq(int *reqinfo, int *fromrank, int *intparam, int intparamnum, voi
                     break;
                 default:
                     fprintf(stderr, "%d : cpl_pollreq() : invalid request tag\n", world_myrank);
-                    return 0;
+                    return -1;
                 }
             }
         }
     }
+
+    return 0;
 }
 
-int CTCAC_enqreq(int *reqinfo, int progid, int *intparam, int intparamnum)
+int CTCAC_pollreq(int *reqinfo, int *fromrank, int *intparam, int intparamnum)
 {
     if (myrole != ROLE_CPL) {
-        fprintf(stderr, "%d : CTCAC_enqreq() : wrong role %d\n", world_myrank, myrole);
-        return 0;
+        fprintf(stderr, "%d : CTCAC_pollreq() : wrong role %d\n", world_myrank, myrole);
+        return -1;
     }
 
-    cpl_enqreq(reqinfo, progid, intparam, intparamnum, NULL, 0);
+    cpl_pollreq(reqinfo, fromrank, intparam, intparamnum, NULL, 0);
+
+    return 0;
 }
 
-int CTCAC_enqreq_withint(int *reqinfo, int progid, int *intparam, int intparamnum, int *data, int datanum)
+int CTCAC_pollreq_withint(int *reqinfo, int *fromrank, int *intparam, int intparamnum, int *data, int datanum)
 {
     if (myrole != ROLE_CPL) {
-        fprintf(stderr, "%d : CTCAC_enqreq_withint() : wrong role %d\n", world_myrank, myrole);
-        return 0;
+        fprintf(stderr, "%d : CTCAC_pollreq_withint() : wrong role %d\n", world_myrank, myrole);
+        return -1;
     }
 
-    cpl_enqreq(reqinfo, progid, intparam, intparamnum, (void *)data, datanum * sizeof(int));
+    cpl_pollreq(reqinfo, fromrank, intparam, intparamnum, (void *)data, datanum * sizeof(int));
+
+    return 0;
 }
 
-int CTCAC_enqreq_withreal4(int *reqinfo, int progid, int *intparam, int intparamnum, float *data, int datanum)
+int CTCAC_pollreq_withreal4(int *reqinfo, int *fromrank, int *intparam, int intparamnum, float *data, int datanum)
 {
     if (myrole != ROLE_CPL) {
-        fprintf(stderr, "%d : CTCAC_enqreq_withreal4() : wrong role %d\n", world_myrank, myrole);
-        return 0;
+        fprintf(stderr, "%d : CTCAC_pollreq_withreal4() : wrong role %d\n", world_myrank, myrole);
+        return -1;
     }
 
-    cpl_enqreq(reqinfo, progid, intparam, intparamnum, (void *)data, datanum * sizeof(float));
+    cpl_pollreq(reqinfo, fromrank, intparam, intparamnum, (void *)data, datanum * sizeof(float));
+
+    return 0;
 }
 
-int CTCAC_enqreq_withreal8(int *reqinfo, int progid, int *intparam, int intparamnum, double *data, int datanum)
+int CTCAC_pollreq_withreal8(int *reqinfo, int *fromrank, int *intparam, int intparamnum, double *data, int datanum)
 {
     if (myrole != ROLE_CPL) {
-        fprintf(stderr, "%d : CTCAC_enqreq_withreal8() : wrong role %d\n", world_myrank, myrole);
-        return 0;
+        fprintf(stderr, "%d : CTCAC_pollreq_withreal8() : wrong role %d\n", world_myrank, myrole);
+        return -1;
     }
 
-    cpl_enqreq(reqinfo, progid, intparam, intparamnum, (void *)data, datanum * sizeof(double));
+    cpl_pollreq(reqinfo, fromrank, intparam, intparamnum, (void *)data, datanum * sizeof(double));
+
+    return 0;
 }
 
 int cpl_enqreq(int *reqinfo, int progid, int *intparam, int intparamnum, void *data, int datasz)
@@ -1056,12 +1061,12 @@ int cpl_enqreq(int *reqinfo, int progid, int *intparam, int intparamnum, void *d
 
     if (cpl_reqq_tail > cpl_maxreqs) {
         fprintf(stderr, "%d : cpl_enqreq() : request queue is full\n", world_myrank);
-        return 0;
+        return -1;
     }
 
     if (intparamnum > maxintparams) {
         fprintf(stderr, "%d : cpl_enqreq() : too many parameters\n", world_myrank);
-        return 0;
+        return -1;
     }
 
     reqentry = cpl_reqq_tail * (CPLWRK_REQITEMS + maxintparams);
@@ -1075,7 +1080,7 @@ int cpl_enqreq(int *reqinfo, int progid, int *intparam, int intparamnum, void *d
     if (datasz > 0) {
         if (datasz > cpl_datbuf_slotsz) {
             fprintf(stderr, "%d : cpl_enqreq() : data too large\n", world_myrank);
-            return 0;
+            return -1;
         }
         datbufentry = -1;
         for (i = 0; i < cpl_datbuf_slotnum; i++) {
@@ -1087,37 +1092,85 @@ int cpl_enqreq(int *reqinfo, int progid, int *intparam, int intparamnum, void *d
         }
         if (datbufentry == -1) {
             fprintf(stderr, "%d : cpl_enqreq() : data buffer is full\n", world_myrank);
-            return 0;
+            return -1;
         }
         cpl_reqq[reqentry + CPLWRK_REQ_ITEM_DATBUFENTRY] = datbufentry;
-        memcpy(((void *)cpl_datbuf + datbufentry * cpl_datbuf_slotsz), data, datasz);
+        memcpy(((char *)cpl_datbuf + datbufentry * cpl_datbuf_slotsz), data, datasz);
     }
 
     cpl_reqq_tail++;
 
-    return 1;
+    return 0;
+}
+
+int CTCAC_enqreq(int *reqinfo, int progid, int *intparam, int intparamnum)
+{
+    if (myrole != ROLE_CPL) {
+        fprintf(stderr, "%d : CTCAC_enqreq() : wrong role %d\n", world_myrank, myrole);
+        return -1;
+    }
+
+    cpl_enqreq(reqinfo, progid, intparam, intparamnum, NULL, 0);
+
+    return 0;
+}
+
+int CTCAC_enqreq_withint(int *reqinfo, int progid, int *intparam, int intparamnum, int *data, int datanum)
+{
+    if (myrole != ROLE_CPL) {
+        fprintf(stderr, "%d : CTCAC_enqreq_withint() : wrong role %d\n", world_myrank, myrole);
+        return -1;
+    }
+
+    cpl_enqreq(reqinfo, progid, intparam, intparamnum, (void *)data, datanum * sizeof(int));
+
+    return 0;
+}
+
+int CTCAC_enqreq_withreal4(int *reqinfo, int progid, int *intparam, int intparamnum, float *data, int datanum)
+{
+    if (myrole != ROLE_CPL) {
+        fprintf(stderr, "%d : CTCAC_enqreq_withreal4() : wrong role %d\n", world_myrank, myrole);
+        return -1;
+    }
+
+    cpl_enqreq(reqinfo, progid, intparam, intparamnum, (void *)data, datanum * sizeof(float));
+
+    return 0;
+}
+
+int CTCAC_enqreq_withreal8(int *reqinfo, int progid, int *intparam, int intparamnum, double *data, int datanum)
+{
+    if (myrole != ROLE_CPL) {
+        fprintf(stderr, "%d : CTCAC_enqreq_withreal8() : wrong role %d\n", world_myrank, myrole);
+        return -1;
+    }
+
+    cpl_enqreq(reqinfo, progid, intparam, intparamnum, (void *)data, datanum * sizeof(double));
+
+    return 0;
 }
 
 int CTCAC_readarea_int(int areaid, int reqrank, int offset, int size, int *dest)
 {
-    int targetrank, val, entry;
+    int targetrank, entry;
     MPI_Win win;
     MPI_Aint disp;
 
     if (myrole != ROLE_CPL) {
         fprintf(stderr, "%d : CTCAC_readarea_int() : wrong role %d\n", world_myrank, myrole);
-        return 0;
+        return -1;
     }
 
     entry = AREAINFO_ITEMS * areaid;
     if (areainfo_table[entry + AREAINFO_ITEM_TYPE] != AREA_INT) {
         fprintf(stderr, "%d : CTCAC_readarea_int() : area type is wrong\n", world_myrank);
-        return 0;
+        return -1;
     }
 
     if (areainfo_table[entry + AREAINFO_ITEM_SIZE] < size + offset) {
         fprintf(stderr, "%d : CTCAC_readarea_int() : out of range\n", world_myrank);
-        return 0;
+        return -1;
     }
 
     targetrank = requesterid_table[reqrank];
@@ -1125,28 +1178,30 @@ int CTCAC_readarea_int(int areaid, int reqrank, int offset, int size, int *dest)
     disp = offset;
     MPI_Get(dest, size, MPI_INT, targetrank, disp, size, MPI_INT, win);
     MPI_Win_flush(targetrank, win);
+
+    return 0;
 }
 
 int CTCAC_readarea_real4(int areaid, int reqrank, int offset, int size, float *dest)
 {
-    int targetrank, val, entry;
+    int targetrank, entry;
     MPI_Win win;
     MPI_Aint disp;
 
     if (myrole != ROLE_CPL) {
         fprintf(stderr, "%d : CTCAC_readarea_real4() : wrong role %d\n", world_myrank, myrole);
-        return 0;
+        return -1;
     }
 
     entry = AREAINFO_ITEMS * areaid;
     if (areainfo_table[entry + AREAINFO_ITEM_TYPE] != AREA_REAL4) {
         fprintf(stderr, "%d : CTCAC_readarea_real4() : area type is wrong\n", world_myrank);
-        return 0;
+        return -1;
     }
 
     if (areainfo_table[entry + AREAINFO_ITEM_SIZE] < size + offset) {
         fprintf(stderr, "%d : CTCAC_readarea_real4() : out of range\n", world_myrank);
-        return 0;
+        return -1;
     }
 
     targetrank = requesterid_table[reqrank];
@@ -1154,28 +1209,30 @@ int CTCAC_readarea_real4(int areaid, int reqrank, int offset, int size, float *d
     disp = offset;
     MPI_Get(dest, size, MPI_FLOAT, targetrank, disp, size, MPI_FLOAT, win);
     MPI_Win_flush(targetrank, win);
+
+    return 0;
 }
 
 int CTCAC_readarea_real8(int areaid, int reqrank, int offset, int size, double *dest)
 {
-    int targetrank, val, entry;
+    int targetrank, entry;
     MPI_Win win;
     MPI_Aint disp;
 
     if (myrole != ROLE_CPL) {
         fprintf(stderr, "%d : CTCAC_readarea_real8() : wrong role %d\n", world_myrank, myrole);
-        return 0;
+        return -1;
     }
 
     entry = AREAINFO_ITEMS * areaid;
     if (areainfo_table[entry + AREAINFO_ITEM_TYPE] != AREA_REAL8) {
         fprintf(stderr, "%d : CTCAC_readarea_real8() : area type is wrong\n", world_myrank);
-        return 0;
+        return -1;
     }
 
     if (areainfo_table[entry + AREAINFO_ITEM_SIZE] < size + offset) {
         fprintf(stderr, "%d : CTCAC_readarea_real8() : out of range\n", world_myrank);
-        return 0;
+        return -1;
     }
 
     targetrank = requesterid_table[reqrank];
@@ -1183,13 +1240,15 @@ int CTCAC_readarea_real8(int areaid, int reqrank, int offset, int size, double *
     disp = offset;
     MPI_Get(dest, size, MPI_DOUBLE, targetrank, disp, size, MPI_DOUBLE, win);
     MPI_Win_flush(targetrank, win);
+
+    return 0;
 }
 
 int CTCAC_finalize()
 {
     if (myrole != ROLE_CPL) {
         fprintf(stderr, "%d : CTCAC_finalize() : wrong role %d\n", world_myrank, myrole);
-        return 0;
+        return -1;
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
@@ -1204,11 +1263,8 @@ int CTCAC_finalize()
     free(cpl_datbuf_stat);
 
     MPI_Finalize();
-}
 
-int CTCAW_init(int progid, int procspercomm)
-{
-    CTCAW_init_detail(progid, procspercomm, DEF_MAXNUMAREAS, DEF_MAXINTPARAMS);
+    return 0;
 }
 
 int CTCAW_init_detail(int progid, int procspercomm, int numareas, int intparams)
@@ -1282,36 +1338,15 @@ int CTCAW_init_detail(int progid, int procspercomm, int numareas, int intparams)
     free(rank_progid_table);
     free(rank_procspercomm_table);
     free(rank_wrkcomm_table);
+
+    return 0;
 }
 
-int CTCAW_regarea_int(int *areaid)
+int CTCAW_init(int progid, int procspercomm)
 {
-    if (myrole != ROLE_WRK) {
-        fprintf(stderr, "%d : CTCAW_regarea_int() : wrong role %d\n", world_myrank, myrole);
-        return 0;
-    }
+    CTCAW_init_detail(progid, procspercomm, DEF_MAXNUMAREAS, DEF_MAXINTPARAMS);
 
-    wrk_regarea(areaid);
-}
-
-int CTCAW_regarea_real4(int *areaid)
-{
-    if (myrole != ROLE_WRK) {
-        fprintf(stderr, "%d : CTCAW_regarea_real4() : wrong role %d\n", world_myrank, myrole);
-        return 0;
-    }
-
-    wrk_regarea(areaid);
-}
-
-int CTCAW_regarea_real8(int *areaid)
-{
-    if (myrole != ROLE_WRK) {
-        fprintf(stderr, "%d : CTCAW_regarea_real8() : wrong role %d\n", world_myrank, myrole);
-        return 0;
-    }
-
-    wrk_regarea(areaid);
+    return 0;
 }
 
 int wrk_regarea(int *areaid)
@@ -1331,14 +1366,51 @@ int wrk_regarea(int *areaid)
 
     *areaid = areaidctr;
     areaidctr++;
+
+    return 0;
 }
 
+int CTCAW_regarea_int(int *areaid)
+{
+    if (myrole != ROLE_WRK) {
+        fprintf(stderr, "%d : CTCAW_regarea_int() : wrong role %d\n", world_myrank, myrole);
+        return -1;
+    }
+
+    wrk_regarea(areaid);
+
+    return 0;
+}
+
+int CTCAW_regarea_real4(int *areaid)
+{
+    if (myrole != ROLE_WRK) {
+        fprintf(stderr, "%d : CTCAW_regarea_real4() : wrong role %d\n", world_myrank, myrole);
+        return -1;
+    }
+
+    wrk_regarea(areaid);
+
+    return 0;
+}
+
+int CTCAW_regarea_real8(int *areaid)
+{
+    if (myrole != ROLE_WRK) {
+        fprintf(stderr, "%d : CTCAW_regarea_real8() : wrong role %d\n", world_myrank, myrole);
+        return -1;
+    }
+
+    wrk_regarea(areaid);
+
+    return 0;
+}
 
 int CTCAW_isfin()
 {
     if (myrole != ROLE_WRK) {
         fprintf(stderr, "%d : CTCAW_isfin() : wrong role %d\n", world_myrank, myrole);
-        return 0;
+        return -1;
     }
 
     if (mystat == STAT_FIN)
@@ -1347,60 +1419,19 @@ int CTCAW_isfin()
         return 0;
 }
 
-int CTCAW_pollreq(int *fromrank, int *intparam, int intparamnum)
-{
-    if (myrole != ROLE_WRK) {
-        fprintf(stderr, "%d : CTCAW_pollreq() : wrong role %d\n", world_myrank, myrole);
-        return 0;
-    }
-
-    wrk_pollreq(fromrank, intparam, intparamnum, NULL, 0);
-}
-
-int CTCAW_pollreq_withint(int *fromrank, int *intparam, int intparamnum, int *data, int datanum)
-{
-    if (myrole != ROLE_WRK) {
-        fprintf(stderr, "%d : CTCAW_pollreq_withint() : wrong role %d\n", world_myrank, myrole);
-        return 0;
-    }
-
-    wrk_pollreq(fromrank, intparam, intparamnum, (void *)data, datanum * sizeof(int));
-}
-
-int CTCAW_pollreq_withreal4(int *fromrank, int *intparam, int intparamnum, float *data, int datanum)
-{
-    if (myrole != ROLE_WRK) {
-        fprintf(stderr, "%d : CTCAW_pollreq_withreal4() : wrong role %d\n", world_myrank, myrole);
-        return 0;
-    }
-
-    wrk_pollreq(fromrank, intparam, intparamnum, (void *)data, datanum * sizeof(float));
-}
-
-int CTCAW_pollreq_withreal8(int *fromrank, int *intparam, int intparamnum, double *data, int datanum)
-{
-    if (myrole != ROLE_WRK) {
-        fprintf(stderr, "%d : CTCAW_pollreq_withreal8() : wrong role %d\n", world_myrank, myrole);
-        return 0;
-    }
-
-    wrk_pollreq(fromrank, intparam, intparamnum, (void *)data, datanum * sizeof(double));
-}
-
 int wrk_pollreq(int *fromrank, int *intparam, int intparamnum, void *data, int datasz)
 {
     MPI_Status stat;
-    MPI_Request req;
     int submyrank, subnprocs, i, bufsz, tag, reqdatasz;
 
     if (mystat == STAT_FIN) {
         fprintf(stderr, "%d : wrk_pollreq() : worker is already in FIN status\n", world_myrank);
-        return 0;
+        return -1;
     }
 
     if (mystat == STAT_RUNNING) {
         fprintf(stderr, "%d : wrk_pollreq() : worker is already in RUNNING status\n", world_myrank);
-        return 0;
+        return -1;
     }
 
     MPI_Comm_size(CTCA_subcomm, &subnprocs);
@@ -1412,18 +1443,26 @@ int wrk_pollreq(int *fromrank, int *intparam, int intparamnum, void *data, int d
         tag = stat.MPI_TAG;
         for (i = 1; i < subnprocs; i++)
             MPI_Send(wrk_reqbuf, bufsz, MPI_INT, i, tag, CTCA_subcomm);
-
-        if (tag == TAG_REQ) {
-            reqdatasz = wrk_reqbuf[CPLWRK_REQ_ITEM_DATSZ];
-            if (reqdatasz != datasz) {
-                fprintf(stderr, "%d : wrk_pollreq() : data size is wrong\n", world_myrank);
-                return 0;
-            }
-            MPI_Recv(data, datasz, MPI_BYTE, rank_cpl, TAG_DAT, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        }
     } else {
         MPI_Recv(wrk_reqbuf, CPLWRK_REQITEMS + maxintparams, MPI_INT, 0, MPI_ANY_TAG, CTCA_subcomm, &stat);
         tag = stat.MPI_TAG;
+    }
+
+    if (tag == TAG_REQ) {
+        reqdatasz = wrk_reqbuf[CPLWRK_REQ_ITEM_DATSZ];
+        if (reqdatasz != datasz) {
+            fprintf(stderr, "%d : wrk_pollreq() : data size is wrong\n", world_myrank);
+            return -1;
+        }
+        if (datasz > 0) {
+            if (submyrank == 0) {
+                MPI_Recv(data, datasz, MPI_BYTE, rank_cpl, TAG_DAT, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                for (i = 1; i < subnprocs; i++)
+                    MPI_Send(data, datasz, MPI_BYTE, i, TAG_DAT, CTCA_subcomm);
+            } else {
+                MPI_Recv(data, datasz, MPI_BYTE, 0, TAG_DAT, CTCA_subcomm, MPI_STATUS_IGNORE);
+            }
+        }
     }
 
     memcpy(intparam, &(wrk_reqbuf[CPLWRK_REQITEMS]), intparamnum*sizeof(int));
@@ -1435,6 +1474,56 @@ int wrk_pollreq(int *fromrank, int *intparam, int intparamnum, void *data, int d
         mystat = STAT_FIN;
     else
         mystat = STAT_RUNNING;
+
+    return 0;
+}
+
+int CTCAW_pollreq(int *fromrank, int *intparam, int intparamnum)
+{
+    if (myrole != ROLE_WRK) {
+        fprintf(stderr, "%d : CTCAW_pollreq() : wrong role %d\n", world_myrank, myrole);
+        return -1;
+    }
+
+    wrk_pollreq(fromrank, intparam, intparamnum, NULL, 0);
+
+    return 0;
+}
+
+int CTCAW_pollreq_withint(int *fromrank, int *intparam, int intparamnum, int *data, int datanum)
+{
+    if (myrole != ROLE_WRK) {
+        fprintf(stderr, "%d : CTCAW_pollreq_withint() : wrong role %d\n", world_myrank, myrole);
+        return -1;
+    }
+
+    wrk_pollreq(fromrank, intparam, intparamnum, (void *)data, datanum * sizeof(int));
+
+    return 0;
+}
+
+int CTCAW_pollreq_withreal4(int *fromrank, int *intparam, int intparamnum, float *data, int datanum)
+{
+    if (myrole != ROLE_WRK) {
+        fprintf(stderr, "%d : CTCAW_pollreq_withreal4() : wrong role %d\n", world_myrank, myrole);
+        return -1;
+    }
+
+    wrk_pollreq(fromrank, intparam, intparamnum, (void *)data, datanum * sizeof(float));
+
+    return 0;
+}
+
+int CTCAW_pollreq_withreal8(int *fromrank, int *intparam, int intparamnum, double *data, int datanum)
+{
+    if (myrole != ROLE_WRK) {
+        fprintf(stderr, "%d : CTCAW_pollreq_withreal8() : wrong role %d\n", world_myrank, myrole);
+        return -1;
+    }
+
+    wrk_pollreq(fromrank, intparam, intparamnum, (void *)data, datanum * sizeof(double));
+
+    return 0;
 }
 
 int CTCAW_complete()
@@ -1444,19 +1533,19 @@ int CTCAW_complete()
 
     if (myrole != ROLE_WRK) {
         fprintf(stderr, "%d : CTCAW_complete() : wrong role %d\n", world_myrank, myrole);
-        return 0;
+        return -1;
     }
 
     MPI_Barrier(CTCA_subcomm);
 
     if (mystat == STAT_FIN) {
         fprintf(stderr, "%d : CTCAW_complete() : worker is already in FIN status\n", world_myrank);
-        return 0;
+        return -1;
     }
 
     if (mystat == STAT_IDLE) {
         fprintf(stderr, "%d : CTCAW_complete() : worker is in IDLE status\n", world_myrank);
-        return 0;
+        return -1;
     }
 
     MPI_Comm_size(CTCA_subcomm, &subnprocs);
@@ -1478,28 +1567,30 @@ int CTCAW_complete()
     MPI_Barrier(CTCA_subcomm);
 
     mystat = STAT_IDLE;
+
+    return 0;
 }
 
 int CTCAW_readarea_int(int areaid, int reqrank, int offset, int size, int *dest)
 {
-    int targetrank, val, entry;
+    int targetrank, entry;
     MPI_Win win;
     MPI_Aint disp;
 
     if (myrole != ROLE_WRK) {
         fprintf(stderr, "%d : CTCAW_readarea_int() : wrong role %d\n", world_myrank, myrole);
-        return 0;
+        return -1;
     }
 
     entry = AREAINFO_ITEMS * areaid;
     if (areainfo_table[entry + AREAINFO_ITEM_TYPE] != AREA_INT) {
         fprintf(stderr, "%d : CTCAW_readarea_int() : area type is wrong\n", world_myrank);
-        return 0;
+        return -1;
     }
 
     if (areainfo_table[entry + AREAINFO_ITEM_SIZE] < size + offset) {
         fprintf(stderr, "%d : CTCAW_readarea_int() : out of range\n", world_myrank);
-        return 0;
+        return -1;
     }
 
     targetrank = requesterid_table[reqrank];
@@ -1507,71 +1598,77 @@ int CTCAW_readarea_int(int areaid, int reqrank, int offset, int size, int *dest)
     disp = offset;
     MPI_Get(dest, size, MPI_INT, targetrank, disp, size, MPI_INT, win);
     MPI_Win_flush(targetrank, win);
+
+    return 0;
 }
 
 int CTCAW_readarea_real4(int areaid, int reqrank, int offset, int size, float *dest)
 {
-    int targetrank, val, entry;
+    int targetrank, entry;
     MPI_Win win;
     MPI_Aint disp;
 
     if (myrole != ROLE_WRK) {
         fprintf(stderr, "%d : CTCAW_readarea_real4() : wrong role %d\n", world_myrank, myrole);
-        return 0;
+        return -1;
     }
 
     entry = AREAINFO_ITEMS * areaid;
     if (areainfo_table[entry + AREAINFO_ITEM_TYPE] != AREA_REAL4) {
         fprintf(stderr, "%d : CTCAW_readarea_real4() : area type is wrong\n", world_myrank);
-        return 0;
+        return -1;
     }
 
     if (areainfo_table[entry + AREAINFO_ITEM_SIZE] < size + offset) {
         fprintf(stderr, "%d : CTCAW_readarea_real4() : out of range\n", world_myrank);
-        return 0;
+        return -1;
     }
 
     targetrank = requesterid_table[reqrank];
     win = areawin_table[areaid];
     disp = offset;
-    MPI_Get(dest, size, MPI_FLOAT, targetrank, disp, size, MPI_INT, win);
+    MPI_Get(dest, size, MPI_FLOAT, targetrank, disp, size, MPI_FLOAT, win);
     MPI_Win_flush(targetrank, win);
+
+    return 0;
 }
 
 int CTCAW_readarea_real8(int areaid, int reqrank, int offset, int size, double *dest)
 {
-    int targetrank, val, entry;
+    int targetrank, entry;
     MPI_Win win;
     MPI_Aint disp;
 
     if (myrole != ROLE_WRK) {
         fprintf(stderr, "%d : CTCAW_readarea_real8() : wrong role %d\n", world_myrank, myrole);
-        return 0;
+        return -1;
     }
 
     entry = AREAINFO_ITEMS * areaid;
     if (areainfo_table[entry + AREAINFO_ITEM_TYPE] != AREA_REAL8) {
         fprintf(stderr, "%d : CTCAW_readarea_real8() : area type is wrong\n", world_myrank);
-        return 0;
+        return -1;
     }
 
     if (areainfo_table[entry + AREAINFO_ITEM_SIZE] < size + offset) {
         fprintf(stderr, "%d : CTCAW_readarea_real8() : out of range\n", world_myrank);
-        return 0;
+        return -1;
     }
 
     targetrank = requesterid_table[reqrank];
     win = areawin_table[areaid];
     disp = offset;
-    MPI_Get(dest, size, MPI_INT, targetrank, disp, size, MPI_INT, win);
+    MPI_Get(dest, size, MPI_DOUBLE, targetrank, disp, size, MPI_DOUBLE, win);
     MPI_Win_flush(targetrank, win);
+
+    return 0;
 }
 
 int CTCAW_finalize()
 {
     if (myrole != ROLE_WRK) {
         fprintf(stderr, "%d : CTCAW_finalize() : wrong role %d\n", world_myrank, myrole);
-        return 0;
+        return -1;
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
@@ -1579,5 +1676,7 @@ int CTCAW_finalize()
     free(wrk_reqbuf);
 
     MPI_Finalize();
+
+    return 0;
 }
 
