@@ -140,11 +140,11 @@ int CTCAR_init_detail(int numareas, int numreqs, int intparams)
     areasize_table = (int *)malloc(numrequesters * numareas * sizeof(int));
 
 //  setup request status table
-    req_reqstat_table = (int64_t *)malloc(req_maxreqs * sizeof(int64_t));
+    size_byte = sizeof(int64_t) * req_maxreqs;
+    MPI_Alloc_mem(size_byte, MPI_INFO_NULL, &req_reqstat_table);
     for (i = 0; i < req_maxreqs; i++)
         req_reqstat_table[i] = REQSTAT_IDLE;
 
-    size_byte = sizeof(int64_t) * req_maxreqs;
     MPI_Win_create((void *)req_reqstat_table, size_byte, sizeof(int64_t), MPI_INFO_NULL, MPI_COMM_WORLD, &win_reqstat);
     MPI_Win_lock_all(0, win_reqstat);
 
@@ -406,7 +406,7 @@ int CTCAR_sendreq_withint_hdl(int *intparams, int numintparams, int *data, int d
 //     increment request id
         req_reqid_ctr++;
 //     send a request with this entry
-        req_sendreq(intparams, numintparams, data, datanum*sizeof(int), DAT_INT, -1);
+        req_sendreq(intparams, numintparams, data, datanum*sizeof(int), DAT_INT, reqentry);
     }
 
     return 0;
@@ -435,7 +435,7 @@ int CTCAR_sendreq_withreal4_hdl(int *intparams, int numintparams, float *data, i
 //     increment request id
         req_reqid_ctr++;
 //     send a request with this entry
-        req_sendreq(intparams, numintparams, data, datanum*sizeof(float), DAT_REAL4, -1);
+        req_sendreq(intparams, numintparams, data, datanum*sizeof(float), DAT_REAL4, reqentry);
     }
 
     return 0;
@@ -464,7 +464,7 @@ int CTCAR_sendreq_withreal8_hdl(int *intparams, int numintparams, double *data, 
 //     increment request id
         req_reqid_ctr++;
 //     send a request with this entry
-        req_sendreq(intparams, numintparams, data, datanum*sizeof(double), DAT_REAL8, -1);
+        req_sendreq(intparams, numintparams, data, datanum*sizeof(double), DAT_REAL8, reqentry);
     }
 
     return 0;
@@ -889,21 +889,24 @@ int cpl_progress()
     for (i = 0; i < cpl_reqq_tail; i++) {
         reqentry = i * (CPLWRK_REQITEMS + maxintparams);
         progid = cpl_reqq[reqentry + CPLWRK_REQ_ITEM_PROGID];
-        for (j = 0; j < cpl_numwrkcomms; j++) {
-            if (cpl_wrkcomm_progid_table[j] == progid) {
-                if (cpl_wrkcomm_stat_table[j] == WRKSTAT_IDLE) {
-                    cpl_wrkcomm_stat_table[j] = WRKSTAT_BUSY;
-                    MPI_Send(&(cpl_reqq[reqentry]), 
-                             CPLWRK_REQITEMS + cpl_reqq[reqentry + CPLWRK_REQ_ITEM_INTPARAMNUM],
-                             MPI_INT, cpl_wrkcomm_headrank_table[j], TAG_REQ, MPI_COMM_WORLD);
-                    datsz = cpl_reqq[reqentry + CPLWRK_REQ_ITEM_DATSZ];
-                    if (datsz > 0) {
-                        bufentry = cpl_reqq[reqentry + CPLWRK_REQ_ITEM_DATBUFENTRY];
-                        MPI_Send((char *)cpl_datbuf + bufentry * cpl_datbuf_slotsz, datsz, MPI_BYTE, 
-                                 cpl_wrkcomm_headrank_table[j], TAG_DAT, MPI_COMM_WORLD);
-                        cpl_datbuf_stat[bufentry] = BUF_AVAIL;
+        if (progid >= 0) {
+            for (j = 0; j < cpl_numwrkcomms; j++) {
+                if (cpl_wrkcomm_progid_table[j] == progid) {
+                    if (cpl_wrkcomm_stat_table[j] == WRKSTAT_IDLE) {
+                        cpl_wrkcomm_stat_table[j] = WRKSTAT_BUSY;
+                        MPI_Send(&(cpl_reqq[reqentry]), 
+                                 CPLWRK_REQITEMS + cpl_reqq[reqentry + CPLWRK_REQ_ITEM_INTPARAMNUM],
+                                 MPI_INT, cpl_wrkcomm_headrank_table[j], TAG_REQ, MPI_COMM_WORLD);
+                        datsz = cpl_reqq[reqentry + CPLWRK_REQ_ITEM_DATSZ];
+                        if (datsz > 0) {
+                            bufentry = cpl_reqq[reqentry + CPLWRK_REQ_ITEM_DATBUFENTRY];
+                            MPI_Send((char *)cpl_datbuf + bufentry * cpl_datbuf_slotsz, datsz, MPI_BYTE, 
+                                     cpl_wrkcomm_headrank_table[j], TAG_DAT, MPI_COMM_WORLD);
+                            cpl_datbuf_stat[bufentry] = BUF_AVAIL;
+                        }
+                        cpl_reqq[reqentry + CPLWRK_REQ_ITEM_PROGID] = -1;
+                        break;
                     }
-                    cpl_reqq[reqentry + CPLWRK_REQ_ITEM_PROGID] = -1;
                 }
             }
         }
@@ -917,7 +920,7 @@ int cpl_progress()
     for (i = j + 1; i < cpl_reqq_tail; i++) {
         reqentry = i * (CPLWRK_REQITEMS + maxintparams);
         if (cpl_reqq[reqentry + CPLWRK_REQ_ITEM_PROGID] != -1) {
-            for (k = 0; k < CPLWRK_REQITEMS; k++)
+            for (k = 0; k < CPLWRK_REQITEMS + maxintparams; k++)
                 cpl_reqq[reqentry_dest + k] = cpl_reqq[reqentry + k];
             j = j + 1;
             reqentry_dest = j * (CPLWRK_REQITEMS + maxintparams);
@@ -1555,7 +1558,7 @@ int CTCAW_complete()
         if (wrk_entry >= 0) {
             val = REQSTAT_IDLE;
             disp = wrk_entry;
-            MPI_Fetch_and_op(&val, &res, MPI_INT, wrk_fromrank, disp, MPI_REPLACE, win_reqstat);
+            MPI_Put((char *)&val, sizeof(int64_t), MPI_BYTE, wrk_fromrank, disp, sizeof(int64_t), MPI_BYTE, win_reqstat);
             MPI_Win_flush(wrk_fromrank, win_reqstat);
         }
 
