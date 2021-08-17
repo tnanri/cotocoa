@@ -22,7 +22,8 @@ export I_MPI_HYDRA_BOOTSTRAP=rsh
 export I_MPI_HYDRA_BOOTSTRAP_EXEC=/bin/pjrsh
 export I_MPI_HYDRA_HOST_FILE=${PJM_O_NODEINF}
 
-mpiexec.hydra -n 4 ./sample1_requester : -n 1 ./sample1_coupler : -n 8 ./sample1_worker1 : -n 8 ./sample1_worker2 : -n 8 ./sample1_worker3
+mpiexec.hydra -n 4 ./sample2_requester : -n 1 ./sample2_coupler : -n 8 ./sample2_worker1 : -n 8 ./sample2_worker2 : -n 8 ./sample2_worker3
+
 
 
 
