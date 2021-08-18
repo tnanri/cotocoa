@@ -8,9 +8,9 @@ Compared with similar frameworks, CoToCoA has the following advantages:
 - Asynchronous execution
 - One-sided data transfer
 
-CoToCoA assumes that the flows of coupled computations are one-directional, originated from one type of program and targeted to another type of program. Those two types of programs are called the requester and the worker, respectively. The requester sends requests which will be executed by one of the workers. CoToCoA allows one requester program with multiple worker programs. The requester sends requests that will be handled by one of the workers.
+CoToCoA assumes that the flows of coupled computations are one-directional, originated from one type of program and targeted to another type of program. Those two types of programs are called the "requester" and the "worker", respectively. The requester sends requests which will be executed by one of the workers. CoToCoA allows one requester program with multiple worker programs. The requester sends requests that will be handled by one of the workers.
 
-To ease the burden of constructing programs to enable coupled computations, CoToCoA is designed to minimize the modifications to the existing programs to connect each other. Therefore, it uses another program called coupler to be placed between the requester and the workers. 
+To ease the burden of constructing programs to enable coupled computations, CoToCoA is designed to minimize the modifications to the existing programs to connect each other. Therefore, it uses another program called the "coupler" to be placed between the requester and the workers. 
 Fundamentaly, the coupler is responsible for:
 - Accepting requests sent from the requester.
 - Choosing an appropriate worker program to handle the request.

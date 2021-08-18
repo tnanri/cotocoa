@@ -17,9 +17,13 @@ Installation of CoToCoA
 - At least, modify the following lines of Makefile according to your environment:
 
   `PREFIX=/usr/local/ctca-1.0`
+
   `CC=mpicc`
+
   `FC=mpif90` 
+
   `CFLAGS=-I.`
+
   `LDFLAGS=-L.`
 
 3. Compile
