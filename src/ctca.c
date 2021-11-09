@@ -144,9 +144,9 @@ char prof_req_items[PROF_REQ_ITEMNUM][PROF_TITLE_LEN] = {
 char prof_cpl_items[PROF_CPL_ITEMNUM][PROF_TITLE_LEN] = {
     "CPL calc",
     "CPL regarea",
-    "CPL pollreq",
     "CPL readarea",
     "CPL writearea",
+    "CPL pollreq",
     "CPL enqreq"
 };
 char prof_wrk_items[PROF_WRK_ITEMNUM][PROF_TITLE_LEN] = {
@@ -1277,7 +1277,7 @@ int cpl_regarea(int *areaid)
     areaidctr++;
 
     if (prof_flag == 1) 
-        prof_cpl_times[PROF_CPL_CALC] += MPI_Wtime() - t0;
+        prof_cpl_times[PROF_CPL_REGAREA] += MPI_Wtime() - t0;
 
     return 0;
 }
