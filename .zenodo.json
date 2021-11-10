@@ -38,7 +38,7 @@
     "related_identifiers": [
         {
             "scheme": "url", 
-            "identifier": "https://github.com/tnanri/cotocoa", 
+            "identifier": "https://github.com/tnanri/cotocoa/tree/v1.2.1", 
             "relation": "isSupplementTo"
         }, 
         {
