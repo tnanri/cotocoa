@@ -1,0 +1,38 @@
+PREFIX=/usr/local/cotocoa
+CC=mpiicc
+FC=mpiifort
+CFLAGS=-I.
+LDFLAGS=-L.
+LIBS=-lctca
+F_LIBS=-lctca_f -lctca_mod
+
+TARGETS=libctca.a libctca_f.a libctca_mod.a
+
+all: ${TARGETS}
+
+libctca.a:	ctca.o
+	ar rc libctca.a ctca.o
+
+libctca_f.a: ctca_f.o
+	ar rc libctca_f.a ctca_f.o
+
+libctca_mod.a: ctca_mod.o
+	ar rc libctca_mod.a ctca_mod.o
+
+ctca.o: ctca.c
+	$(CC) $(CFLAGS) -c ctca.c
+
+ctca_f.o: ctca_f.c
+	$(CC) $(CFLAGS) -c ctca_f.c
+
+ctca_mod.o: ctca_mod.f90
+	$(FC) $(CFLAGS) -c ctca_mod.f90
+
+install: all
+	/usr/bin/mkdir -p ${PREFIX}/lib
+	/usr/bin/mkdir -p ${PREFIX}/include
+	/bin/cp libctca.a libctca_f.a libctca_mod.a ${PREFIX}/lib
+	/bin/cp ctca.h ctca.mod ${PREFIX}/include
+
+clean:
+	/bin/rm -f *.o *.mod ${TARGETS}
