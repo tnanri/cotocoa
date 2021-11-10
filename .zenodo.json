@@ -1,37 +1,13 @@
 {
     "description": "Code-To-Code Adapter", 
     "license": "other-open", 
-    "title": "CoToCoA", 
+    "title": "tnanri/cotocoa: CoToCoA version 1.2.1", 
+    "version": "v1.2.1", 
     "upload_type": "software", 
     "publication_date": "2021-11-09", 
     "creators": [
         {
-          "affiliation": "Kyushu University",
-          "name": "Takeshi Nanri"
-        },
-        {
-          "affiliation": "Tohoku University",
-          "name": "Yuto Katoh"
-        },
-        {
-          "affiliation": "Kyoto University",
-          "name": "Keiichiro Fukazawa"
-        },
-        {
-          "affiliation": "Kobe University",          
-          "name": "Yohei Miyake"
-        },
-        {
-          "affiliation": "Kobe University",
-          "name": "Kazuya Nakazawa"
-        },
-        {
-          "affiliation": "Kyoto University",          
-          "name": "Jingde Zhow"
-        },
-        {
-          "affiliation": "Kobe University",
-          "name": "Youhei Sunada"
+            "name": "Takeshi Nanri"
         }
     ], 
     "access_right": "open", 
