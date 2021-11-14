@@ -1,8 +1,8 @@
 {
     "description": "Code-To-Code Adapter", 
     "license": "other-open", 
-    "title": "tnanri/cotocoa: CoToCoA version 1.2.1", 
-    "version": "v1.2.1", 
+    "title": "tnanri/cotocoa: CoToCoA version 1.2.2", 
+    "version": "v1.2.2", 
     "upload_type": "software", 
     "creators": [
         {
@@ -13,7 +13,7 @@
     "related_identifiers": [
         {
             "scheme": "url", 
-            "identifier": "https://github.com/tnanri/cotocoa/tree/v1.2.1", 
+            "identifier": "https://github.com/tnanri/cotocoa/tree/v1.2.2", 
             "relation": "isSupplementTo"
         }, 
         {
