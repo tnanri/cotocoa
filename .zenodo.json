@@ -15,6 +15,6 @@
             "scheme": "url", 
             "identifier": "https://github.com/tnanri/cotocoa/tree/v1.2.2", 
             "relation": "isSupplementTo"
-        }, 
+        }
     ]
 }
