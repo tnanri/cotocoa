@@ -16,9 +16,5 @@
             "identifier": "https://github.com/tnanri/cotocoa/tree/v1.2.2", 
             "relation": "isSupplementTo"
         }, 
-        {
-            "scheme": "doi", 
-            "identifier": "10.5281/zenodo.5655840", 
-        }
     ]
 }
