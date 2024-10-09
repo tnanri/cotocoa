@@ -25,16 +25,6 @@ class CTCAWorker:
         # self.subcomm=0
         self.subrank=0
 
-        # counter
-        self.CTCAW_pollreq_counter=0       # number of CTCAW_pollreq calls
-        self.CTCAW_readarea_counter=0
-        self.CTCAW_writearea_counter=0
-        
-        # execution time
-        self.WRK_pollreq_t=0 # time of CTCAW_pollreq
-        self.WRK_readarea_t=0    # time of CTCAW_readarea
-        self.CTCAW_writearea_t=0 
-
         self.areaid=0    #area id
 
         # load shared library
@@ -157,8 +147,6 @@ class CTCAWorker:
 
     def CTCAW_pollreq(self,intparamsnum,datanum=0,datatype=0):
 
-        start_time=MPI.Wtime()
-
         # prepare parameters 
         data=np.array([],dtype=np.int32)
         intparam=np.zeros(intparamsnum,dtype=np.int32)
@@ -217,14 +205,6 @@ class CTCAWorker:
                 data_c,
                 ctypes.c_size_t(datasz)
             )
-        
-        end_time=MPI.Wtime()
-        time_pollreq=end_time-start_time
-        
-        self.WRK_pollreq_t+=time_pollreq
-        self.CTCAW_pollreq_counter+=1
-        # print(f"the time of poll request of python process{self.rank}: {time_pollreq:8.3e} sec")
-        print(f"the time{self.CTCAW_pollreq_counter}: {time_pollreq:8.3e} sec")
 
         return fromrank_c.value,intparam,data
     
@@ -244,8 +224,6 @@ class CTCAWorker:
     def CTCAW_readarea(self,areaid,reqrank,offset,size,datatype=0)->np.array:
         data=np.array([],dtype=np.int32)
         
-        # start 
-        start_time=MPI.Wtime()
         if datatype==self.DAT_INT:
             data=np.zeros(size,dtype=np.int32)
             self.c_lib.CTCAW_readarea_int(areaid,reqrank,\
@@ -263,11 +241,6 @@ class CTCAWorker:
             self.c_lib.CTCAW_readarea_real8(areaid,reqrank,\
                                             offset,size,\
                                             data.ctypes.data_as(ctypes.POINTER(ctypes.c_double)))
-        
-        # end    
-        end_time=MPI.Wtime()
-
-        self.WRK_readarea_t+=end_time-start_time
 
         return data
     
@@ -276,7 +249,6 @@ class CTCAWorker:
         if not data.flags['C_CONTIGUOUS']:
             data=np.ascontiguousarray(data)
         
-
         if datatype==self.AREA_INT:
             data=np.zeros(size,dtype=np.int32)
             self.c_lib.CTCAW_writearea_int(areaid,reqrank,\

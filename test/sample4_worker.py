@@ -51,7 +51,6 @@ while True:
 ctca.CTCAW_prof_stop_calc()
 ctca.CTCAW_prof_stop()
 
-print(f"the time of poll request of python process {ctca.subrank} total {ctca.CTCAW_pollreq_counter} times: {ctca.WRK_pollreq_t:8.3e} sec")
 ctca.CTCAW_finalize()
 
 print("%d:python worker finalize"%(subrank))
