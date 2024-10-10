@@ -20,3 +20,4 @@ Developers of CoToCoA:
 - Kazuya Nakazawa (Kobe Univ., Japan)
 - Jingde Zhow (Kyoto Univ., Japan)
 - Youhei Sunada (Kobe Univ., Japan)
+- Haichao Zhao (Kyoto Univ., Japan)
