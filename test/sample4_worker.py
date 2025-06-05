@@ -3,8 +3,7 @@ import os
 from mpi4py import MPI
 import numpy as np
 import sys
-# sys.path.append('/home/a/a0238138') # specify the path to CTCAWorker file
-from ctca4py import CTCAWorker
+from ctca4py.ctcaworker import CTCAWorker 
 
 # import CTCAWorker class from ctca4py file
 ctca=CTCAWorker()

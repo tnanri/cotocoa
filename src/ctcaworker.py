@@ -28,7 +28,7 @@ class CTCAWorker:
         self.areaid=0    #area id
 
         # load shared library
-        self.c_lib=ctypes.CDLL(os.path.abspath('/home/a/a0238138/ctca4py/ctca4py.so'))
+        self.c_lib=ctypes.CDLL(os.path.abspath('INSTALLLIBDIR/ctca4py.so'))
 
         # CTCAW_init
         self.c_lib.CTCAW_init.argtypes=[ctypes.c_int,ctypes.c_int]
