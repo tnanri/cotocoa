@@ -16,7 +16,7 @@ As the fundamental communication layer, it relies on the MPI library.
 Developers of CoToCoA:
 - Takeshi Nanri (Kyushu Univ., Japan)
 - Yuto Katoh (Tohoku Univ., Japan)
-- Keiichiro Fukazawa (Kyoto Univ., Japan)
+- Keiichiro Fukazawa (Research Institute for Humanity and Nature, Japan)
 - Yohei Miyake (Kobe Univ., Japan)
 - Kazuya Nakazawa (Kobe Univ., Japan)
 - Jingde Zhow (Kyoto Univ., Japan)
